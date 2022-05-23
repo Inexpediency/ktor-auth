@@ -6,6 +6,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
+import javax.validation.ConstraintViolation
+import javax.validation.Validator
 
 fun Application.configureExceptionHandler() {
     install(StatusPages) {
@@ -23,3 +25,15 @@ fun Application.configureExceptionHandler() {
         }
     }
 }
+
+class AuthenticationException : RuntimeException()
+class AuthorizationException : RuntimeException()
+
+@Throws(BadRequestException::class)
+fun <T : Any> T.validate(validator: Validator) {
+    validator.validate(this)
+        .takeIf { it.isNotEmpty() }
+        ?.let { throw BadRequestException(it.first().messageWithFieldName()) }
+}
+
+fun <T : Any> ConstraintViolation<T>.messageWithFieldName() = "${this.propertyPath} ${this.message}"

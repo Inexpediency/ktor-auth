@@ -6,13 +6,10 @@ import com.example.services.JwtAuthService
 import com.example.services.UserServiceImpl
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import javax.validation.ConstraintViolation
 import javax.validation.Validation
-import javax.validation.Validator
 
 fun Application.configureRouting() {
     val validator = Validation.buildDefaultValidatorFactory().validator
@@ -22,10 +19,6 @@ fun Application.configureRouting() {
     val jwtAuthService = JwtAuthService(jwtUserDao)
 
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
-
         post("/create_user") {
             val jwtUserDto = call.receive<JwtUserDto>()
             jwtUserDto.validate(validator)
@@ -70,15 +63,3 @@ fun Application.configureRouting() {
         }
     }
 }
-
-class AuthenticationException : RuntimeException()
-class AuthorizationException : RuntimeException()
-
-@Throws(BadRequestException::class)
-fun <T : Any> T.validate(validator: Validator) {
-    validator.validate(this)
-        .takeIf { it.isNotEmpty() }
-        ?.let { throw BadRequestException(it.first().messageWithFieldName()) }
-}
-
-fun <T : Any> ConstraintViolation<T>.messageWithFieldName() = "${this.propertyPath} ${this.message}"

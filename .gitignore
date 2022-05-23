@@ -2,6 +2,9 @@
 .vscode
 .idea
 
+### Temp files
+tmp
+
 ### Gradle template
 .gradle
 **/build/

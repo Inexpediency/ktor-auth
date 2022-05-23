@@ -1,9 +1,9 @@
 package com.example
 
 import com.example.dao.DatabaseFactory
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
-import com.example.plugins.*
+import com.example.plugins.configureExceptionHandler
+import com.example.plugins.configureRouting
+import com.example.plugins.configureSerialization
 import io.ktor.server.application.*
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)

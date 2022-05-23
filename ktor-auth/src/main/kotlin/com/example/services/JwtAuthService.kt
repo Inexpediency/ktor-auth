@@ -6,9 +6,7 @@ import com.example.dto.JwtUserPublicDto
 import com.example.dto.TokensDto
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
-import io.jsonwebtoken.security.Keys
 import org.mindrot.jbcrypt.BCrypt
-import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.spec.SecretKeySpec
 
