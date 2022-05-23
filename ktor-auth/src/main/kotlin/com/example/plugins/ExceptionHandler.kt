@@ -11,25 +11,23 @@ import javax.validation.Validator
 
 fun Application.configureExceptionHandler() {
     install(StatusPages) {
-        exception<AuthenticationException> { call, cause ->
-            call.respond(HttpStatusCode.Unauthorized)
-        }
-        exception<AuthorizationException> { call, cause ->
-            call.respond(HttpStatusCode.Forbidden)
-        }
-        exception<BadRequestException> { call, cause ->
-            call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorDto(cause.message ?: "", HttpStatusCode.BadRequest.value)
-            )
+        exception<Throwable> { call, cause ->
+            val statusCode: HttpStatusCode = when (cause) {
+                is AuthenticationException -> HttpStatusCode.Unauthorized
+                is AuthorizationException -> HttpStatusCode.Forbidden
+                is BadRequestException -> HttpStatusCode.BadRequest
+                is ContentTransformationException -> HttpStatusCode.BadRequest
+                else -> HttpStatusCode.InternalServerError
+            }
+
+            call.respond(statusCode, ErrorDto(cause.message ?: "", statusCode.value))
         }
     }
 }
 
-class AuthenticationException : RuntimeException()
-class AuthorizationException : RuntimeException()
+class AuthenticationException(message: String = "") : RuntimeException(message)
+class AuthorizationException(message: String = "") : RuntimeException(message)
 
-@Throws(BadRequestException::class)
 fun <T : Any> T.validate(validator: Validator) {
     validator.validate(this)
         .takeIf { it.isNotEmpty() }

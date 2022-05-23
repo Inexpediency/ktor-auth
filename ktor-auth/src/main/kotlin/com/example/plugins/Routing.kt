@@ -1,35 +1,29 @@
 package com.example.plugins
 
+import com.example.JwtConfig
 import com.example.dao.JwtUserDaoImpl
 import com.example.dto.JwtUserDto
 import com.example.services.JwtAuthService
 import com.example.services.UserServiceImpl
-import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import javax.validation.Validation
 
-fun Application.configureRouting() {
+fun Application.configureRouting(jwtConfig: JwtConfig) {
     val validator = Validation.buildDefaultValidatorFactory().validator
 
     val jwtUserDao = JwtUserDaoImpl()
     val userService = UserServiceImpl(jwtUserDao)
-    val jwtAuthService = JwtAuthService(jwtUserDao)
+    val jwtAuthService = JwtAuthService(jwtUserDao, jwtConfig)
 
     routing {
         post("/create_user") {
             val jwtUserDto = call.receive<JwtUserDto>()
             jwtUserDto.validate(validator)
 
-            val result = userService.create(jwtUserDto)
-
-            if (result != null) {
-                call.respond(result)
-            } else {
-                call.respond(HttpStatusCode.BadRequest, "user already exists")
-            }
+            call.respond(userService.create(jwtUserDto))
         }
 
         post("/sign_in") {
@@ -37,29 +31,20 @@ fun Application.configureRouting() {
             jwtUserDto.validate(validator)
 
             val result = jwtAuthService.signIn(jwtUserDto)
+                ?: throw AuthenticationException("invalid username or password")
 
-            if (result != null) {
-                call.respond(result)
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, "invalid username or password")
-            }
+            call.respond(result)
         }
 
         get("/whoami") {
-            val token = call.request.header("Token")
+            val token = call.request.header(jwtConfig.headerName)
             if (token == null || token == "") {
-                call.respond(HttpStatusCode.Unauthorized, "empty request header")
-
-                return@get
+                throw AuthenticationException("empty request header")
             }
 
-            val result = jwtAuthService.whoami(token)
+            val result = jwtAuthService.whoami(token) ?: throw AuthenticationException("invalid token")
 
-            if (result != null) {
-                call.respond(result)
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, "invalid token")
-            }
+            call.respond(result)
         }
     }
 }

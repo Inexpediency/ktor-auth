@@ -5,6 +5,6 @@ import com.example.dto.JwtUserPublicDto
 import com.example.dto.UserIdDto
 
 interface UserService {
-    suspend fun create(jwtUserDto: JwtUserDto): UserIdDto?
-    suspend fun get(id: Int): JwtUserPublicDto?
+    suspend fun create(jwtUserDto: JwtUserDto): UserIdDto
+    suspend fun get(id: Int): JwtUserPublicDto
 }
